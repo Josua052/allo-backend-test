@@ -21,6 +21,9 @@ public record ExpenseRequestDto(
         @NotBlank(message = "Description cannot be blank")
         String description,
 
+        @NotNull(message = "Split strategy cannot be null")
+        com.allobank.splitbill.model.SplitStrategy splitStrategy,
+
         @NotEmpty(message = "Splits cannot be empty")
         @Valid
         List<ExpenseSplitRequestDto> splits

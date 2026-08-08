@@ -9,7 +9,10 @@ import com.allobank.splitbill.model.Expense;
 import com.allobank.splitbill.model.ExpenseSplit;
 import com.allobank.splitbill.model.Group;
 import com.allobank.splitbill.model.Participant;
+import com.allobank.splitbill.model.SplitStrategy;
 import com.allobank.splitbill.repository.ExpenseRepository;
+import com.allobank.splitbill.service.strategy.SplitCalculationStrategy;
+import com.allobank.splitbill.service.strategy.SplitStrategyFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +30,7 @@ public class ExpenseService {
 
     private final GroupService groupService;
     private final ExpenseRepository expenseRepository;
+    private final SplitStrategyFactory strategyFactory;
 
     @Transactional
     public ExpenseResponseDto addExpense(UUID groupId, ExpenseRequestDto request) {
@@ -35,15 +39,11 @@ public class ExpenseService {
         Map<UUID, Participant> participantMap = group.getParticipants().stream()
                 .collect(Collectors.toMap(Participant::getId, p -> p));
 
-        Participant paidBy = getParticipantSafely(participantMap, request.paidByParticipantId());
+        Participant paidBy = SplitCalculationStrategy.getParticipantSafely(participantMap, request.paidByParticipantId());
 
-        BigDecimal calculatedTotal = request.splits().stream()
-                .map(splitDto -> splitDto.amountOwed())
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        if (request.amount().compareTo(calculatedTotal) != 0) {
-            throw new AmountMismatchException("Total amount does not match the sum of splits");
-        }
+        // Get the appropriate strategy and execute
+        SplitCalculationStrategy strategy = strategyFactory.getStrategy(request.splitStrategy());
+        strategy.validate(request);
 
         Expense expense = new Expense();
         expense.setGroup(group);
@@ -51,14 +51,7 @@ public class ExpenseService {
         expense.setAmount(request.amount());
         expense.setDescription(request.description());
 
-        List<ExpenseSplit> splits = request.splits().stream().map(splitDto -> {
-            Participant participant = getParticipantSafely(participantMap, splitDto.participantId());
-            ExpenseSplit split = new ExpenseSplit();
-            split.setParticipant(participant);
-            split.setAmountOwed(splitDto.amountOwed());
-            split.setExpense(expense);
-            return split;
-        }).collect(Collectors.toList());
+        List<ExpenseSplit> splits = strategy.calculateSplits(request, participantMap, expense);
 
         expense.setSplits(splits);
         Expense savedExpense = expenseRepository.save(expense);
@@ -66,14 +59,7 @@ public class ExpenseService {
         return mapToResponseDto(savedExpense);
     }
 
-    // Helper method to retrieve a participant from the map or throw a custom exception
-    private Participant getParticipantSafely(Map<UUID, Participant> map, UUID participantId) {
-        Participant participant = map.get(participantId);
-        if (participant == null) {
-            throw new InvalidParticipantException("Participant " + participantId + " does not belong to this group");
-        }
-        return participant;
-    }
+    // Helper method getParticipantSafely was moved to SplitCalculationStrategy
 
     // Maps the saved entity into a clean response DTO to prevent exposing database internals
     private ExpenseResponseDto mapToResponseDto(Expense expense) {
