@@ -1,5 +1,7 @@
 package com.allobank.splitbill.service;
 
+import com.allobank.splitbill.dto.GroupResponseDto;
+import com.allobank.splitbill.dto.ParticipantResponseDto;
 import com.allobank.splitbill.exception.ResourceNotFoundException;
 import com.allobank.splitbill.model.Group;
 import com.allobank.splitbill.model.Participant;
@@ -21,7 +23,7 @@ public class GroupService {
 
     // Creates a new group and automatically associates the provided participant names with it
     @Transactional
-    public Group createGroup(String name, List<String> participantNames) {
+    public GroupResponseDto createGroup(String name, List<String> participantNames) {
         Group group = new Group();
         group.setName(name);
 
@@ -35,7 +37,18 @@ public class GroupService {
         group.setParticipants(participants);
         
         // Cascades save operation to all associated participants automatically
-        return groupRepository.save(group);
+        Group savedGroup = groupRepository.save(group);
+        return mapToDto(savedGroup);
+    }
+
+    private GroupResponseDto mapToDto(Group group) {
+        return new GroupResponseDto(
+                group.getId(),
+                group.getName(),
+                group.getParticipants().stream()
+                        .map(p -> new ParticipantResponseDto(p.getId(), p.getName()))
+                        .collect(Collectors.toList())
+        );
     }
 
     // Retrieves a group by ID or throws an exception if not found
