@@ -1,7 +1,14 @@
 server:
   port: 4110
+  error:
+    include-stacktrace: never
+    include-message: always
+    include-binding-errors: always
 
 spring:
+  jackson:
+    default-property-inclusion: non_null
+
   application:
     name: splitbill
 
