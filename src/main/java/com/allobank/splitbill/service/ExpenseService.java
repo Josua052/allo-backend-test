@@ -3,13 +3,10 @@ package com.allobank.splitbill.service;
 import com.allobank.splitbill.dto.ExpenseRequestDto;
 import com.allobank.splitbill.dto.ExpenseResponseDto;
 import com.allobank.splitbill.dto.ExpenseSplitResponseDto;
-import com.allobank.splitbill.exception.AmountMismatchException;
-import com.allobank.splitbill.exception.InvalidParticipantException;
 import com.allobank.splitbill.model.Expense;
 import com.allobank.splitbill.model.ExpenseSplit;
 import com.allobank.splitbill.model.Group;
 import com.allobank.splitbill.model.Participant;
-import com.allobank.splitbill.model.SplitStrategy;
 import com.allobank.splitbill.repository.ExpenseRepository;
 import com.allobank.splitbill.service.strategy.SplitCalculationStrategy;
 import com.allobank.splitbill.service.strategy.SplitStrategyFactory;
@@ -17,7 +14,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -58,8 +54,6 @@ public class ExpenseService {
 
         return mapToResponseDto(savedExpense);
     }
-
-    // Helper method getParticipantSafely was moved to SplitCalculationStrategy
 
     // Maps the saved entity into a clean response DTO to prevent exposing database internals
     private ExpenseResponseDto mapToResponseDto(Expense expense) {

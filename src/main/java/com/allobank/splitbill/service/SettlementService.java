@@ -24,7 +24,7 @@ public class SettlementService {
     private final GroupService groupService;
 
     // Injecting properties rather than hardcoding business rules
-    @Value("${app.github.username:GKM605HQ}")
+    @Value("${app.github.username:Josua052}")
     private String githubUsername;
 
     // Calculates optimized debts and Allo Bank service charge

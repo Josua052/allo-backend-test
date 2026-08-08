@@ -43,7 +43,7 @@ class SettlementServiceTest {
     @BeforeEach
     void setUp() {
         // Inject configuration property via reflection
-        ReflectionTestUtils.setField(settlementService, "githubUsername", "GKM605HQ");
+        ReflectionTestUtils.setField(settlementService, "githubUsername", "Josua052");
 
         groupId = UUID.randomUUID();
         
@@ -98,7 +98,7 @@ class SettlementServiceTest {
         assertEquals(participantA.getId(), transaction.toParticipantId());
         assertTrue(new BigDecimal("150").compareTo(transaction.amount()) == 0);
         
-        // GKM605HQ ASCII Sum = 531 % 10 = 1%
+        // Josua052 ASCII Sum = 531 % 10 = 1%
         assertEquals(1, response.serviceChargePct());
         // Total expense 450. 1% of 450 = 4.5. Use compareTo to ignore trailing zeroes.
         assertTrue(new BigDecimal("4.5").compareTo(response.serviceChargeAmount()) == 0);
